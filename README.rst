@@ -19,6 +19,7 @@ It also has a dual-application as a command-line utility for converting existing
 c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate)
 
 Stack size: 60 x 3838 x 3710 (3.4 GB)   
+
 +---------------+----------------+-----------------+--------------+---------------------+
 |Type           |Write time(s)   |Read time(s)     |Size (MB)     |Compression Ratio (%)|
 +===============+================+=================+==============+=====================+
