@@ -11,8 +11,22 @@ to shrink files on disk and greatly accelerate file input/output for the era of 
 
 c-MRCZ is currently in alpha. 
 
-c-MRCZ is written in C99 for maximum backwards compatibility.  It is designed to be a minimalist implementation of the specification, such that it may be used as a 
-template by other 
+c-MRCZ is written in C99 for maximum backwards compatibility.  It is designed to be a minimalist implementation of the specification, such that it may be used as a template by other programmers for their own code. As such it has 
+basic factories for two structs, mrcHeader and mrcVolume.  
+
+It also has a dual-application as a command-line utility for converting existing MRC files to compressed variants, or equivalently decompressing MRCZ files so that legacy software can read the result.  
+
+c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate):
+
+    Stack size: 60 x 3838 x 3710 (3.4 GB)
+    
+    Type            Write time(s)    Read time(s)      Size (MB)      Compression Ratio (%)
+    float32         17.1             11.5              3250           100.0
+    float32-zstd1   18.3             11.4              2740           120.0
+    int8            2.8              3.0               814            400.0
+    uint4           2.6              6.3               407            800.0
+    int8-zstd1      1.4              1.1               281           1160.0
+
 
 
 Installation
