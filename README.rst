@@ -16,17 +16,20 @@ basic factories for two structs, mrcHeader and mrcVolume.
 
 It also has a dual-application as a command-line utility for converting existing MRC files to compressed variants, or equivalently decompressing MRCZ files so that legacy software can read the result.  
 
-c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate)::
+c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate)
 
-    Stack size: 60 x 3838 x 3710 (3.4 GB)
-    
+Stack size: 60 x 3838 x 3710 (3.4 GB)   
 +---------------+----------------+-----------------+--------------+---------------------+
 |Type           |Write time(s)   |Read time(s)     |Size (MB)     |Compression Ratio (%)|
 +===============+================+=================+==============+=====================+
 |float32        |17.1            |11.5             |3250          |100.0                |
++---------------+----------------+-----------------+--------------+---------------------+
 |float32-zstd1  |18.3            |11.4             |2740          |120.0                |
++---------------+----------------+-----------------+--------------+---------------------+
 |int8           |2.8             |3.0              |814           |400.0                |
++---------------+----------------+-----------------+--------------+---------------------+
 |uint4          |2.6             |6.3              |407           |800.0                |
++---------------+----------------+-----------------+--------------+---------------------+
 |int8-zstd1     |1.4             |1.1              |281           |1160.0               |
 +---------------+----------------+-----------------+--------------+---------------------+
 
@@ -70,13 +73,15 @@ Command-line Tutorial
 
 Basic usage::
 
-    mrcz -i <input_file> -o <output_file> [-c <compressor> -B <blocksize> -l <compression_level> -f <filter_enum> -n <# threads> ]
+    mrcz -i <input_file> -o <output_file> [-c <compressor> -B <blocksize> -l <compression_level> 
+      -f <filter_enum> -n <# threads> ]
 
     -c is one of 'none', 'lz4', 'lz4hc', 'zlib', or 'zstd' (default).
 
     -B is the size of each compression block in bytes (default: 131072).
 
-    -l is compression level, 0 is uncompressed, 9 is very slow (default: 1). Compression ratio with 'zstd' saturates at about 4.
+    -l is compression level, 0 is uncompressed, 9 is very slow (default: 1). Compression ratio 
+      with 'zstd' saturates at about 4.
 
     -f is the filter, 0 is no filter, 1 is byte-shuffle, 2 is bit-shuffle (default).  
 
@@ -100,7 +105,7 @@ Feature List
 Citations
 ---------
 
-* A. Cheng et al., "MRC2014: Extensions to the MRC format header for electron cryo-microscopy and tomography", Journal of Structural Biology 192(2): 146-150, November 2015, http://dx.doi.org/10.1016/j.jsb.2015.04.002
-* V. Haenel, "Bloscpack: a compressed lightweight serialization format for numerical data", arXiv:1404.6383
+1. A. Cheng et al., "MRC2014: Extensions to the MRC format header for electron cryo-microscopy and tomography", Journal of Structural Biology 192(2): 146-150, November 2015, http://dx.doi.org/10.1016/j.jsb.2015.04.002
+2. V. Haenel, "Bloscpack: a compressed lightweight serialization format for numerical data", arXiv:1404.6383
 
 
