@@ -16,17 +16,19 @@ basic factories for two structs, mrcHeader and mrcVolume.
 
 It also has a dual-application as a command-line utility for converting existing MRC files to compressed variants, or equivalently decompressing MRCZ files so that legacy software can read the result.  
 
-c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate):
+c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate)::
 
     Stack size: 60 x 3838 x 3710 (3.4 GB)
     
-    Type            Write time(s)    Read time(s)      Size (MB)      Compression Ratio (%)
-    float32         17.1             11.5              3250           100.0
-    float32-zstd1   18.3             11.4              2740           120.0
-    int8            2.8              3.0               814            400.0
-    uint4           2.6              6.3               407            800.0
-    int8-zstd1      1.4              1.1               281           1160.0
-
++---------------+----------------+-----------------+--------------+---------------------+
+|Type           |Write time(s)   |Read time(s)     |Size (MB)     |Compression Ratio (%)|
++===============+================+=================+==============+=====================+
+|float32        |17.1            |11.5             |3250          |100.0                |
+|float32-zstd1  |18.3            |11.4             |2740          |120.0                |
+|int8           |2.8             |3.0              |814           |400.0                |
+|uint4          |2.6             |6.3              |407           |800.0                |
+|int8-zstd1     |1.4             |1.1              |281           |1160.0               |
++---------------+----------------+-----------------+--------------+---------------------+
 
 
 Installation
@@ -39,17 +41,17 @@ c-MRCZ has the following dependencies:
 * `c-blosc` (downloaded automatically by CMake).
 * `git` (TO BE removed later).
 
-On a Ubuntu/Debian Linux computer:
+On a Ubuntu/Debian Linux computer::
 
     sudo apt-get install cmake
 
-On RHEL/CentOS:
+On RHEL/CentOS::
 
     sudo yum install cmake
 
 (Git should be pre-installed on most Linux distros.)
 
-Then navigate to where you would like to install c-mrcz (such as ~/mrcz), and clone the git repo:
+Then navigate to where you would like to install c-mrcz (such as ~/mrcz), and clone the git repo::
 
     git clone https://github.com/em-MRCZ/c-mrcz.git
     
@@ -61,20 +63,23 @@ Then navigate to where you would like to install c-mrcz (such as ~/mrcz), and cl
 
 It may be necessary at present to re-run `make` as the cmake script downloads blosc from git (on the issues list TODO).
 
-
 c-MRCZ is released under the BSD license.
 
 Command-line Tutorial
 ---------------------
 
-TODO.
+Basic usage::
 
     mrcz -i <input_file> -o <output_file> [-c <compressor> -B <blocksize> -l <compression_level> -f <filter_enum> -n <# threads> ]
 
     -c is one of 'none', 'lz4', 'lz4hc', 'zlib', or 'zstd' (default).
+
     -B is the size of each compression block in bytes (default: 131072).
+
     -l is compression level, 0 is uncompressed, 9 is very slow (default: 1). Compression ratio with 'zstd' saturates at about 4.
+
     -f is the filter, 0 is no filter, 1 is byte-shuffle, 2 is bit-shuffle (default).  
+
     -n is the number of threads, this is best as the number of virtual cores (default: 4).
 
 
@@ -83,8 +88,7 @@ Library Usage Examples
 
 [TODO]
 
-The return type from `mrcVolume_data( vol )` is a void-pointer so the user is responsible for casting it.  This can be done with a switch-case, or by checking which of the 
-pointers in the `mrcVolume` struct is `!= NULL`.  
+The return type from `mrcVolume_data( vol )` is a void-pointer so the user is responsible for casting it.  This can be done with a switch-case, or by checking which of the pointers in the `mrcVolume` struct is `!= NULL`.  
 
 Feature List
 ------------

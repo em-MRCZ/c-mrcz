@@ -527,7 +527,7 @@ int writeMRCZ( FILE *fh, mrcVolume *vol )
 void _print_help()
 {
     // IF NO COMMAND ARGS, or -h
-    printf( "Useage:  mrcz -i <input_file> -o <output_file> [-c <compressor> -B <blocksize>\n-l <compression_level> -f <filter_enum> -n <# threads> ]\n" );
+    printf( "Usage:  mrcz -i <input_file> -o <output_file> [-c <compressor> -B <blocksize>\n-l <compression_level> -f <filter_enum> -n <# threads> ]\n" );
     printf( "  Takes an input MRC/Z file and transforms it into a compressed/\n  decompressed MRC/Z file.\n" );
     printf( "Options:\n" );
     printf( "    **All arguments apply to the output file only**.\n" );
