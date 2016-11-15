@@ -31,7 +31,7 @@ extern "C" {
 
 #define MRCZ_VERSION_STRING   "0.1.2"  // string version.  Sync with above! 
 #define MRCZ_VERSION_REVISION "$Rev$"   // revision version
-#define MRCZ_VERSION_DATE     "$Date:: 2016-11-14 #$"    // date version
+#define MRCZ_VERSION_DATE     "$Date:: 2016-11-15 #$"    // date version
 
 // CMake includes
 #if defined(USING_CMAKE)
@@ -40,25 +40,26 @@ extern "C" {
 
 
 // Standard (non-extended) header is the default
-#define MRC_HEADER_LEN 1024 
+// We plan to insert meta-data as a footer in the future.
+#define MRC_HEADER_LEN              1024 
 
 // Data Types for MRC -- IMOD standard
 // Compressed types are MRC_TYPE + (MRC_COMP_RATIO * COMPRESSOR_XXX)
-#define MRC_COMP_RATIO    1000  
-#define MRC_INT8          0
-#define MRC_INT16         1
-#define MRC_FLOAT32       2
-#define MRC_COMPLEX64     4
-#define MRC_UINT16        6
+#define MRC_COMP_RATIO              1000  
+#define MRC_INT8                    0
+#define MRC_INT16                   1
+#define MRC_FLOAT32                 2
+#define MRC_COMPLEX64               4
+#define MRC_UINT16                  6
 
 // Types for compressors
-#define BLOSC_NONE_COMPNAME      "none"
-#define BLOSC_BLOSCLZ_COMPNAME   "blosclz"
-#define BLOSC_LZ4_COMPNAME       "lz4"
-#define BLOSC_LZ4HC_COMPNAME     "lz4hc"
-#define BLOSC_SNAPPY_COMPNAME    "snappy"
-#define BLOSC_ZLIB_COMPNAME      "zlib"
-#define BLOSC_ZSTD_COMPNAME      "zstd"
+#define BLOSC_NONE_COMPNAME         "none"
+#define BLOSC_BLOSCLZ_COMPNAME      "blosclz"
+#define BLOSC_LZ4_COMPNAME          "lz4"
+#define BLOSC_LZ4HC_COMPNAME        "lz4hc"
+#define BLOSC_SNAPPY_COMPNAME       "snappy"
+#define BLOSC_ZLIB_COMPNAME         "zlib"
+#define BLOSC_ZSTD_COMPNAME         "zstd"
 
 // These are the defines BLOSC_XXX + 1 so that we can have an unpacked 'none' type
 #define BLOSC_COMPRESSOR_NONE       0
@@ -69,15 +70,15 @@ extern "C" {
 #define BLOSC_COMPRESSOR_ZLIB       5
 #define BLOSC_COMPRESSOR_ZSTD       6
 
-#define BLOSC_NOSHUFFLE       0
-#define BLOSC_SHUFFLE         1
-#define BLOSC_BITSHUFFLE      2 
+#define BLOSC_NOSHUFFLE             0
+#define BLOSC_SHUFFLE               1
+#define BLOSC_BITSHUFFLE            2 
 
-#define BLOSC_DEFAULT_THREADS    4
-#define BLOSC_DEFAULT_BLOCKSIZE  131072
-#define BLOSC_DEFAULT_COMPRESSOR BLOSC_COMPRESSOR_ZSTD
-#define BLOSC_DEFAULT_FILTER     BLOSC_BITSHUFFLE
-#define BLOSC_DEFAULT_CLEVEL     1
+#define BLOSC_DEFAULT_THREADS       4
+#define BLOSC_DEFAULT_BLOCKSIZE     131072
+#define BLOSC_DEFAULT_COMPRESSOR    BLOSC_COMPRESSOR_ZSTD
+#define BLOSC_DEFAULT_FILTER        BLOSC_BITSHUFFLE
+#define BLOSC_DEFAULT_CLEVEL        1
 
 /*
 mrcHeader::
