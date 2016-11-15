@@ -6,19 +6,17 @@ Author: Robert A. McLeod
 
 Email: robbmcleod@gmail.com
 
-c-MRCZ is a package designed to supplement the venerable MRC image file format with a highly efficient compressed variant, using the Blosc meta-compressor library 
-to shrink files on disk and greatly accelerate file input/output for the era of "Big Data" in electron (and optical) microscopy.
+c-MRCZ is a package designed to supplement the venerable MRC image file format with a highly efficient compressed variant, using the Blosc meta-compressor library to shrink files on disk and greatly accelerate file input/output for the era of "Big Data" in electron (and optical) microscopy. Compared to alternative file formats such as HDF5 it is a highly light-weight implemtation (~800 lines) and offers high-de/compression rate, and high de/compression ratio through the use of the `blosc` meta-compressor library.  `blosc` accelerates high-performance compression codecs such as `zstd` and `lz4` by both blocking code operations and multi-threaded operation over multiple blocks. In MRCZ format each slice along the z-axis is compressed in a seperate chunk, which allows any particular slicing operation along the z-axis to be completed without decompressing the entire volume. `blosc` also optionally applies a filter to the data, each (byte) `SHUFFLE` or `BITSHUFFLE`, where the data is re-arranged in its most-significant to least-significant digit. In tests on cryo-TEM data the bit-shuffle filter yielded significant improvements in both disk read/write times and compression ratio.
 
 c-MRCZ is currently in alpha. 
 
-c-MRCZ is written in C99 for maximum backwards compatibility.  It is designed to be a minimalist implementation of the specification, such that it may be used as a template by other programmers for their own code. As such it has 
-basic factories for two structs, mrcHeader and mrcVolume.  
+c-MRCZ is written in C99 for maximum backwards compatibility.  It is designed to be a minimalist implementation of the specification, such that it may be used as a template by other programmers for their own code. As such it has basic factories for two structs, mrcHeader and mrcVolume.  
 
 It also has a dual-application as a command-line utility for converting existing MRC files to compressed variants, or equivalently decompressing MRCZ files so that legacy software can read the result.  
 
 c-MRCZ and its cousin python-MRCZ are ultra-fast.  Here are some early benchmarks that compare compressed to uncompressed performance on a RAID0 hard drive (~ 300 MB/s read/write rate)
 
-Stack size: 60 x 3838 x 3710 (3.4 GB)   
+Stack size: 60 x 3838 x 3710 (3.4 GB) Aligned movie .mrcs file.
 
 +---------------+----------------+-----------------+--------------+---------------------+
 |Type           |Write time(s)   |Read time(s)     |Size (MB)     |Compression Ratio (%)|

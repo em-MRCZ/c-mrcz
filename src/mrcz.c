@@ -36,7 +36,7 @@
   #include <process.h>
   #define getpid _getpid
   
-  // Consider adding wingetopt.h: http://note.sonots.com/Comp/CompLang/cpp/getopt.html
+  // TODO: add windows port of getopt()
 #else /* POSIX or MINGW32 */
   #include <stdint.h>
   #include <unistd.h>
@@ -57,7 +57,7 @@ mrcHeader* mrcHeader_new()
 {
     mrcHeader *self = malloc( sizeof( *self ) );
 
-    // Set default values
+    // Set default values for blosc
     self->blosc_threads = BLOSC_DEFAULT_THREADS;
     self->blosc_blocksize = BLOSC_DEFAULT_BLOCKSIZE;
     self->blosc_filter = BLOSC_DEFAULT_FILTER;
@@ -113,13 +113,10 @@ void* mrcVolume_data( mrcVolume *self )
             return (void *)self->_u1;
         case MRC_INT16:
             return (void *)self->_i2;
-            
         case MRC_FLOAT32:
             return (void *)self->_f4;
-            
         case MRC_COMPLEX64:
             return (void *)self->_c8;
-    
         case MRC_UINT16:
             return (void *)self->_u2;
     }
@@ -445,10 +442,10 @@ int _compressMRCZ( FILE *fh, mrcVolume *source )
 
 
 
-///////////////////////////////////////////////////////////////////////////////
-// MRCZ library public functions
-///////////////////////////////////////////////////////////////////////////////
-// Consider overloaded readMRCZ( char *filename, mrcVolume *dest ) that opens the file.
+/*
+  MRCZ library public functions
+*/ 
+//Consider overloaded readMRCZ( char *filename, mrcVolume *dest ) that opens the file.
 
 int readMRCZ( FILE *fh, mrcVolume *dest, char *name_for_metadata )
 {   // Read from a file handle and then write to an address mrcVolume struct, dest.
@@ -538,7 +535,9 @@ void _print_help()
     printf( "    -n is the number of threads, typically the number of virtual cores (default: 4).\n" );
 }
 
-
+/*
+  Command-line
+*/
 int main(int argc, char *argv[])
 {
     char *inputName, *outputName, *compressor;

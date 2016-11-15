@@ -1,3 +1,11 @@
+/*********************************************************************
+  Compressed MRCZ File-format Command-line Utility 
+
+  Author: Robert A. McLeod <robbmcleod@gmail.com>
+
+  See LICENSE.txt for details about copyright and rights to use.
+**********************************************************************/
+
 #ifndef MRCZ_H
 #define MRCZ_H
 #endif
@@ -6,13 +14,11 @@
 #include <stdlib.h>
 #include <complex.h>
 
-
 #include "blosc.h"
 // TODO: CMAKE NOT PASSING IN USE_BLOSC define!!!
 //#ifdef USE_BLOSC
 //    #include "blosc.h"
 //#endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,9 +27,9 @@ extern "C" {
 // Version information
 #define MRCZ_VERSION_MAJOR    0    // for major interface/format changes 
 #define MRCZ_VERSION_MINOR    1   // for minor interface/format changes 
-#define MRCZ_VERSION_RELEASE  1    // for tweaks, bug-fixes, or development
+#define MRCZ_VERSION_RELEASE  2    // for tweaks, bug-fixes, or development
 
-#define MRCZ_VERSION_STRING   "0.1.0"  // string version.  Sync with above! 
+#define MRCZ_VERSION_STRING   "0.1.2"  // string version.  Sync with above! 
 #define MRCZ_VERSION_REVISION "$Rev$"   // revision version
 #define MRCZ_VERSION_DATE     "$Date:: 2016-11-14 #$"    // date version
 
@@ -73,11 +79,16 @@ extern "C" {
 #define BLOSC_DEFAULT_FILTER     BLOSC_BITSHUFFLE
 #define BLOSC_DEFAULT_CLEVEL     1
 
-///////////////////////////////////////////////////////////////////////////////
-// mrcHeader:
-//
-// Holds all the parameters to be read or written in an MRC file header.
-///////////////////////////////////////////////////////////////////////////////
+/*
+mrcHeader::
+
+  Holds all the parameters to be read or written in an MRC file header. 
+  
+Functions::
+  
+  mrcHeader* mrcHeader_new()
+    return a new mrcHeader initialized to default values.
+*/
 typedef struct _mrcHeader
 {
     // Meta-information not included in the standard header
@@ -111,7 +122,7 @@ typedef struct _mrcHeader
     
     // MRC2000 fields
     float origin;
-    uint8_t endian[2];
+    uint8_t endian[2];   // TODO: not implemented yet.
     float std;
     
     float voltage;       // in keV
@@ -119,14 +130,32 @@ typedef struct _mrcHeader
     float gain;          // counts/primary electron
 } mrcHeader;
 
-///////////////////////////////////////////////////////////////////////////////
-// mrcVolume:
-//
-// Has two class functions:
-//    data() returns an array pointer (must be cast by the user!) to the data 
-//        array
-//    free() cleans up all memory allocated to the mrcVolume struct.
-///////////////////////////////////////////////////////////////////////////////
+/*
+mrcVolume::
+
+  Encapusulates a MRC file, holding both an mrcHeader *header and pointers to 
+  all of the available data types. Typically only one of the pointers should 
+  not be NULL at any point in time (although it may be helpful to voliate this
+  rule for converting data types.)
+
+Functions::
+ 
+  mrcVolume* mrcVolume_new( mrcHeader *header, void *in_array ) 
+    returns an mrcVolume struct with allocated memory space. Either argument 
+    may be NULL.
+    
+  void* mrcVolume_data( mrcVolume *vol )
+    returns the valid pointer to the active array, according to header->mrcType.
+    
+    ** The user must cast the return pointer to the appropriate ctype in order 
+    to use the returned pointer as an array. **
+    
+  int mrcVolume_itemsize( mrcVolume *vol )
+    returns the itemsize (in bytes) of the data according to header->mrcType  
+  
+  mrcVolume_free( mrcVolume *vol ) 
+    cleans up all memory allocated to the mrcVolume struct.
+*/
 typedef struct _mrcVolume
 {
     mrcHeader *header;
@@ -144,18 +173,24 @@ typedef struct _mrcVolume
 } mrcVolume;
 
 
+/* 
+  Public library functions 
+*/
+mrcHeader*   mrcHeader_new()
+
+mrcVolume*   new_mrcVolume( mrcHeader *header, void *data );
+size_t       mrcVolume_itemsize( mrcVolume *self );
+void         mrcVolume_free( mrcVolume *self )
+
+int          readMRCZ( FILE *fh, mrcVolume *dest, char *filename );
+int          writeMRCZ( FILE *fh, mrcVolume *vol );
 
 
-/* Public library functions */
-mrcVolume* new_mrcVolume( mrcHeader *header, void *data );
-size_t mrcVolume_itemsize( mrcVolume *self );
-
-int readMRCZ( FILE *fh, mrcVolume *dest, char *filename );
-int writeMRCZ( FILE *fh, mrcVolume *vol );
-
-/* Private library functions */
-// You can call these are your own risk, as the implementation interface may 
-// change arbitrarily in the future.
+/* 
+  Private library functions 
+  You can call these at your own risk, as the implementation interface may 
+  change arbitrarily in the future. 
+*/
 int _parseStandardHeader( uint8_t *headerBytes, mrcHeader *header, char *filename );
 uint8_t* _buildStandardHeader( FILE *fh, mrcHeader *header );
 int _loadUncompressedMRC( FILE *fh, mrcVolume *dest );
