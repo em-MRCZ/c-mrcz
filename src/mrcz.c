@@ -6,6 +6,11 @@
   See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
 
+#if defined(_MSC_VER)
+    // Don't include these CRT warnings as they aren't cross-platform relevant.
+    #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 // General library includes
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,9 +34,12 @@
   /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
   #if defined(_MSC_VER) && _MSC_VER < 1600
     #include "win32/stdint-windows.h"
+
   #else
     #include <stdint.h>
   #endif
+
+  #include "win32/getopt.h"
 
   #include <process.h>
   #define getpid _getpid
@@ -43,12 +51,14 @@
   #include <inttypes.h>
 #endif  /* _WIN32 */
 
-#if defined(_WIN32) && !defined(__GNUC__)
-  #include "win32/pthread.h"
-  #include "win32/pthread.c"
-#else
-  #include <pthread.h>
-#endif
+
+// Not currently using pthreads in mrcz, just blosc
+//#if defined(_WIN32) && !defined(__GNUC__)
+//  #include "win32/pthread.h"
+//  #include "win32/pthread.c"
+//#else
+//  #include <pthread.h>
+//#endif
 
 // MRCZ Module includes
 #include "mrcz.h"
@@ -58,7 +68,8 @@ mrcHeader* mrcHeader_new()
     mrcHeader *self = malloc( sizeof( *self ) );
 
     // Set default values for blosc
-    self->blosc_threads = BLOSC_DEFAULT_THREADS;
+    //self->blosc_threads = BLOSC_DEFAULT_THREADS;
+    self->blosc_threads = getNumCPU();
     self->blosc_blocksize = BLOSC_DEFAULT_BLOCKSIZE;
     self->blosc_filter = BLOSC_DEFAULT_FILTER;
     self->blosc_clevel = BLOSC_DEFAULT_CLEVEL;
@@ -85,7 +96,7 @@ mrcVolume* mrcVolume_new( mrcHeader *header, void *in_array )
         switch( header->mrcType )
         {
         case MRC_INT8:
-            self->_u1 = (int8_t*)in_array;
+            self->_i1 = (int8_t*)in_array;
             break;
         case MRC_INT16:
             self->_i2 = (int16_t*)in_array;
@@ -94,7 +105,11 @@ mrcVolume* mrcVolume_new( mrcHeader *header, void *in_array )
             self->_f4 = (float*)in_array;
             break;
         case MRC_COMPLEX64:
-            self->_c8 = (complex*)in_array;
+#if defined(_WIN32) && !defined(__MINGW32__)
+            self->_c8 = (_Fcomplex*)in_array;
+#else
+		  self->_c8 = (float complex*)in_array;
+#endif
             break;
         case MRC_UINT16:
             self->_u2 = (uint16_t*)in_array;
@@ -110,7 +125,7 @@ void* mrcVolume_data( mrcVolume *self )
     switch( self->header->mrcType )
     {
         case MRC_INT8:
-            return (void *)self->_u1;
+            return (void *)self->_i1;
         case MRC_INT16:
             return (void *)self->_i2;
         case MRC_FLOAT32:
@@ -120,6 +135,7 @@ void* mrcVolume_data( mrcVolume *self )
         case MRC_UINT16:
             return (void *)self->_u2;
     }
+    return NULL;
 }
 
 size_t mrcVolume_itemsize( mrcVolume *self )
@@ -136,7 +152,8 @@ size_t mrcVolume_itemsize( mrcVolume *self )
             return 8;
         case MRC_UINT16:
             return 2;
-    }    
+    }
+    return 0;
 }
 
 void mrcVolume_free( mrcVolume *self )
@@ -151,6 +168,21 @@ void mrcVolume_free( mrcVolume *self )
     free( self );
 }
 
+int getNumCPU()
+{   // Get the number of physical processors on the machine for setting default threads.
+    // http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
+    // OS defines:
+    // https://sourceforge.net/p/predef/wiki/OperatingSystems/
+#ifdef _WIN32
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo( &sysinfo );
+    return sysinfo.dwNumberOfProcessors;
+#else
+    // Linux, AIX, MacOSX >= 10.4
+    return sysconf( _SC_NPROCESSORS_ONLN );
+#endif
+}
+
 int _parseStandardHeader( uint8_t *headerBytes, mrcHeader* header, char *metaname )
 {
     // Start 
@@ -163,6 +195,10 @@ int _parseStandardHeader( uint8_t *headerBytes, mrcHeader* header, char *metanam
     {   // Check if the mrc type/mode is >= 1000, which indicates a compressed type
         header->blosc_compressor = header->mrcType / MRC_COMP_RATIO;
         header->mrcType = header->mrcType % MRC_COMP_RATIO;
+    }
+    else
+    {
+        header->blosc_compressor = BLOSC_COMPRESSOR_NONE;
     }
 
     memcpy( &header->nStart, &headerBytes[16], sizeof(header->nStart) );
@@ -183,6 +219,11 @@ int _parseStandardHeader( uint8_t *headerBytes, mrcHeader* header, char *metanam
     memcpy( &header->endian, &headerBytes[212], sizeof(header->endian) );
     memcpy( &header->std, &headerBytes[216], sizeof(header->std) );
 
+    // MRCZ fields
+    memcpy( &header->voltage, &headerBytes[132], sizeof(header->voltage) );
+    memcpy( &header->C3, &headerBytes[136], sizeof(header->C3) );
+    memcpy( &header->gain, &headerBytes[140], sizeof(header->gain) );
+           
     // CMake defines NDEBUG for _no_ debugging
 #ifndef NDEBUG 
     printf( "Metadata name: %s\n", metaname );
@@ -224,16 +265,11 @@ uint8_t* _buildStandardHeader( FILE *fh, mrcHeader *header )
 
     // MRCZ2016 fields
     memcpy( &headerBytes[132], &header->voltage, sizeof(header->voltage) );
-    memcpy( &headerBytes[136], &header-C3, sizeof(header->C3) );    
+    memcpy( &headerBytes[136], &header->C3, sizeof(header->C3) );    
     memcpy( &headerBytes[140], &header->gain, sizeof(header->gain) );
     return headerBytes;
 }
 
-#define MRC_INT8          0
-#define MRC_INT16         1
-#define MRC_FLOAT32       2
-#define MRC_COMPLEX64     4
-#define MRC_UINT16        6
 int _loadUncompressedMRC( FILE *fh, mrcVolume *dest )
 {
     // mrcVolume *dest must be allocated and have a valid header.
@@ -265,8 +301,13 @@ int _loadUncompressedMRC( FILE *fh, mrcVolume *dest )
             break;
             
         case MRC_COMPLEX64:
-            dest->_c8 = malloc( dsize * sizeof(complex) );
-            fread_ret = fread( dest->_c8, sizeof(complex), dsize, fh );
+#if defined(_WIN32) && !defined(__MINGW32__)
+			dest->_c8 = malloc(dsize * sizeof(_Fcomplex));
+			fread_ret = fread(dest->_c8, sizeof(_Fcomplex), dsize, fh);
+#else
+			dest->_c8 = malloc(dsize * sizeof(float complex));
+			fread_ret = fread(dest->_c8, sizeof(float complex), dsize, fh);
+#endif
             break;
         case MRC_UINT16:
             dest->_u2 = malloc( dsize * sizeof(uint16_t) );
@@ -286,7 +327,7 @@ int _loadUncompressedMRC( FILE *fh, mrcVolume *dest )
 int _decompressMRCZ( FILE *fh, mrcVolume *dest )
 {
     // fh must point to the start of the first blsoc1 (32-byte) header
-    int blosc_ret;
+    int blosc_ret, fread_ret;
     size_t dx = dest->header->dimensions[0]; 
     size_t dy = dest->header->dimensions[1];                                
     size_t dz = dest->header->dimensions[2];
@@ -326,7 +367,11 @@ int _decompressMRCZ( FILE *fh, mrcVolume *dest )
             bytesRepr = (uint8_t*)dest->_f4;
             break;
         case MRC_COMPLEX64:
-            dest->_c8 = malloc( dsize * sizeof(complex) );
+#if defined(_WIN32) && !defined(__MINGW32__)
+			dest->_c8 = malloc(dsize * sizeof(_Fcomplex));
+#else
+			dest->_c8 = malloc(dsize * sizeof(float complex));
+#endif   
             itemsize = 8;
             bytesRepr = (uint8_t*)dest->_c8;    
             break;
@@ -340,19 +385,19 @@ int _decompressMRCZ( FILE *fh, mrcVolume *dest )
     blosc_init();
     // Iterate through each z-axis slice as a chunk and decompress 
     // each one.
-    for( int k = 0; k < dz; k++ )
+    for( uint32_t k = 0; k < dz; k++ )
     {
         // Blosc header format:
         // https://github.com/Blosc/c-blosc/blob/master/README_HEADER.rst
         tell_pos = ftell( fh );
-        fread( blosc_header, sizeof(blosc_header), 1, fh ); 
+        fread_ret = fread( blosc_header, sizeof(blosc_header), 1, fh ); 
         fseek( fh, tell_pos, SEEK_SET );
 
 #ifndef NDEBUG
         printf( "_decompressMRCZ: blosc_header: flags: %d, nbytes: %d, blocksize: %d, cbytes: %d\n", blosc_header[0], blosc_header[1], blosc_header[2], blosc_header[3]);
 #endif
         bloscRepr = malloc( blosc_header[3] );
-        fread( bloscRepr, sizeof(uint8_t), blosc_header[3], fh );
+        fread_ret = fread( bloscRepr, sizeof(uint8_t), blosc_header[3], fh );
         blosc_ret = blosc_decompress_ctx( (void *)bloscRepr, 
                                          (void *)&bytesRepr[itemsize*k*dx*dy], 
                                          itemsize*dx*dy, dest->header->blosc_threads );
@@ -408,7 +453,7 @@ int _compressMRCZ( FILE *fh, mrcVolume *source )
 #endif
 
     blosc_init();
-    for( int k = 0; k < dz; k++ )
+    for( uint32_t k = 0; k < dz; k++ )
     {
         blosc_ret = blosc_compress_ctx( header->blosc_clevel, 
                                         header->blosc_filter, 
@@ -493,6 +538,7 @@ int writeMRCZ( FILE *fh, mrcVolume *vol )
     uint8_t *headerBytes;
     void *dataPtr;
     size_t dsize;
+    int fwrite_ret = 0;
     
     headerBytes = _buildStandardHeader( fh, vol->header );
     fh_dataStartPos += vol->header->extendedHeaderSize;
@@ -515,10 +561,11 @@ int writeMRCZ( FILE *fh, mrcVolume *vol )
     {   // Uncompressed data
         dataPtr = mrcVolume_data(vol);
         dsize = vol->header->dimensions[0]*vol->header->dimensions[1]*vol->header->dimensions[2];
-        printf( "addressof *dataPtr = %p\n", dataPtr );
-        printf( "sizeof *dataPtr = %lu\n", sizeof(*dataPtr) );
-        fwrite( dataPtr, mrcVolume_itemsize(vol), dsize, fh );
+        //printf( "dsize = %lu\n", dsize );
+        //printf( "itemsize = %lu\n", mrcVolume_itemsize(vol) );
+        fwrite_ret = fwrite( dataPtr, mrcVolume_itemsize(vol), dsize, fh );
     }
+    return fwrite_ret;
 }
 
 void _print_help()
@@ -532,7 +579,7 @@ void _print_help()
     printf( "    -B is the size of each compression block in bytes (default: 131072).\n" );
     printf( "    -l  is compression level, 0 is uncompressed, 9 is very slow (default: 1). \n        Compression ratio with 'zstd' saturates at about 4.\n" );
     printf( "    -f  is the filter, 0 is no filter, 1 is byte-shuffle, 2 is bit-shuffle (default).\n"  );
-    printf( "    -n is the number of threads, typically the number of virtual cores (default: 4).\n" );
+    printf( "    -n is the number of threads (default: to the number of cores).\n" );
 }
 
 /*
@@ -544,6 +591,7 @@ int main(int argc, char *argv[])
     FILE *fh;
     mrcVolume *vol;
     int opt, blocksize=-1, n_threads=-1, filter=-1, clevel=-1;
+    int fwrite_len = 0;
     
     printf( "Compressed MRC file-format command-line utility, ver.%d.%d.%d\n", 
            MRCZ_VERSION_MAJOR, MRCZ_VERSION_MINOR, MRCZ_VERSION_RELEASE ); 
@@ -645,11 +693,15 @@ int main(int argc, char *argv[])
         printf( "Error: could not open %s to write.\n", outputName );
         return -1;
     }
-    writeMRCZ( fh, vol );
+    fwrite_len = writeMRCZ( fh, vol );
+#ifndef NDEBUG
+    printf( "DEBUG: wrote %d bytes of data to disk.\n", fwrite_len );
+#endif
     fclose( fh );
 
 
     // Garbage collection (not necessary but this is an example of how to do it)
-    mrcVolume_free( vol );
+    // Which is causing a seg-fault in some cases, why?
+    //mrcVolume_free( vol );
     return 0;
 }

@@ -10,8 +10,14 @@
 #define MRCZ_H
 #endif
 
+#if defined(_MSC_VER)
+    // Don't include these CRT warnings as they aren't cross-platform relevant.
+    #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <limits.h>
 #include <stdlib.h>
+
 #include <complex.h>
 
 #include "blosc.h"
@@ -27,11 +33,11 @@ extern "C" {
 // Version information
 #define MRCZ_VERSION_MAJOR    0    // for major interface/format changes 
 #define MRCZ_VERSION_MINOR    1   // for minor interface/format changes 
-#define MRCZ_VERSION_RELEASE  2    // for tweaks, bug-fixes, or development
+#define MRCZ_VERSION_RELEASE  3    // for tweaks, bug-fixes, or development
 
-#define MRCZ_VERSION_STRING   "0.1.2"  // string version.  Sync with above! 
+#define MRCZ_VERSION_STRING   "0.1.3"  // string version.  Sync with above! 
 #define MRCZ_VERSION_REVISION "$Rev$"   // revision version
-#define MRCZ_VERSION_DATE     "$Date:: 2016-11-15 #$"    // date version
+#define MRCZ_VERSION_DATE     "$Date:: 2016-11-23 #$"    // date version
 
 // CMake includes
 #if defined(USING_CMAKE)
@@ -169,7 +175,12 @@ typedef struct _mrcVolume
     int16_t  *_i2;
     float    *_f4;
     // TODO: add the complex uint16 type, will probably want an import?  Or a struct?
-    complex  *_c8;
+#if defined(_WIN32) && !defined(__MINGW32__)
+    _Fcomplex  *_c8;
+#else
+    float complex  *_c8;
+#endif
+
     
 } mrcVolume;
 
@@ -177,15 +188,16 @@ typedef struct _mrcVolume
 /* 
   Public library functions 
 */
-mrcHeader*   mrcHeader_new()
+mrcHeader*   mrcHeader_new();
 
 mrcVolume*   new_mrcVolume( mrcHeader *header, void *data );
 size_t       mrcVolume_itemsize( mrcVolume *self );
-void         mrcVolume_free( mrcVolume *self )
+void         mrcVolume_free( mrcVolume *self );
 
 int          readMRCZ( FILE *fh, mrcVolume *dest, char *filename );
 int          writeMRCZ( FILE *fh, mrcVolume *vol );
 
+int          getNumCPU();
 
 /* 
   Private library functions 

@@ -1,0 +1,10 @@
+Testing with c-mrcz is intended to be done on circleci.com by using the 
+python-mrcz library and unittest to compare the outputs from c-mrcz to those 
+of python-mrcz.
+
+Typically an install needs numpy, and
+
+    pip install mrcz
+
+which by requirements for python-mrcz will also install python-blosc.
+

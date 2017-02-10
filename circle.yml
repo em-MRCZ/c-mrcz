@@ -1,0 +1,17 @@
+general:
+  build_dir: .
+  
+machine:
+  python:
+    version: 3.5.2
+    
+dependencies:
+  pre:
+    - pip install numpy
+    - pip install blosc --allow-external mrcz --allow-unverified mrcz
+    - pip install mrcz --allow-external mrcz --allow-unverified mrcz
+
+    
+test:
+  override:    
+    - export PATH="~/c-mrcz/:$PATH"; python test/test_mrcz.py 

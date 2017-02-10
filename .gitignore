@@ -1,2 +1,5 @@
 build
 src/c-blosc
+winbuild
+*.test
+
