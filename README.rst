@@ -10,6 +10,14 @@ Email: robbmcleod@gmail.com
     :depth: 2
     :local:
 
+.. image:: https://travis-ci.org/em-MRCZ/c-mrcz.svg?branch=master
+    :target: https://travis-ci.org/em-MRCZ/c-mrcz
+.. image:: https://circleci.com/gh/em-MRCZ/c-mrcz.svg?style=svg
+    :target: https://circleci.com/gh/em-MRCZ/c-mrcz
+.. image:: https://ci.appveyor.com/api/projects/status/qfas1xd6noixqkcp?svg=true
+    :target: https://ci.appveyor.com/project/robbmcleod/c-mrcz
+
+
 Introduction
 ============
 
