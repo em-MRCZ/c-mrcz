@@ -29,6 +29,7 @@ build_script:
   - cmd: cmake .. "-G%GENERATOR%"
   - cmd: cmake --build . --config "%CONFIG%"
 
+
 #test_script:
 #  - ps: cd _builds
 #  - ctest -VV -C "%CONFIG%"
