@@ -9,6 +9,7 @@ dependencies:
   pre:
     - pip install numpy
     - pip install blosc --allow-external mrcz --allow-unverified mrcz
+    - pip uninstall -y mrcz
     - pip install mrcz --allow-external mrcz --allow-unverified mrcz
 
     
